@@ -15,18 +15,16 @@ export default function Register({ currentPage, setCurrentPage }) {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/register', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3001/api/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(userdata),
       });
 
-      const result = await response.json();
-
       if (response.ok) {
-        console.log("User registered with ID:");
+        console.log("User registered successfully");
         return true;
       } else {
         return false;
@@ -39,7 +37,7 @@ export default function Register({ currentPage, setCurrentPage }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (currentPage === 1) {
       const success = await handleRegister();
       if (!success) {
@@ -53,10 +51,13 @@ export default function Register({ currentPage, setCurrentPage }) {
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
-      
+
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Name
           </label>
           <input
@@ -69,9 +70,12 @@ export default function Register({ currentPage, setCurrentPage }) {
             required
           />
         </div>
-        
+
         <div className="mb-4">
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="phone"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Phone
           </label>
           <input
@@ -84,9 +88,9 @@ export default function Register({ currentPage, setCurrentPage }) {
             required
           />
         </div>
-        
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
         >
           Submit
