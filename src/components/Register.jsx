@@ -79,7 +79,7 @@ export default function Register({ currentPage, setCurrentPage }) {
             Phone
           </label>
           <input
-            type="tel"
+            type="number"
             name="phone"
             id="phone"
             value={phone}

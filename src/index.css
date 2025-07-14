@@ -1,1 +1,33 @@
 @import "tailwindcss";
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none; /* Hide scrollbar in IE and Edge */
+  scrollbar-width: none; /* Hide scrollbar in Firefox */
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+.main-text {
+  @apply text-[3.25em] font-semibold text-[#002448];
+}
+
+.main-button {
+  @apply text-[3.25em] font-semibold bg-[#002448] text-white;
+}
+
+.height-input {
+  @apply h-[126px];
+}
