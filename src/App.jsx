@@ -1,10 +1,11 @@
 import { Route, Routes } from "react-router-dom";
-import Game from "./pages/Game";
-
+import Main from "./pages/Main";
+import Database from "./pages/Database";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Game />} />
+      <Route path="/" element={<Main />} />
+      <Route path="/database" element={<Database />} />
     </Routes>
   );
 }
