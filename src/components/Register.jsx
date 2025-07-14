@@ -10,7 +10,6 @@ export default function Register({ currentPage, setCurrentPage }) {
       phone: phone.trim(),
     };
 
-    // Validate input
     if (!userdata.name || !userdata.phone) {
       return false;
     }
@@ -27,7 +26,7 @@ export default function Register({ currentPage, setCurrentPage }) {
       const result = await response.json();
 
       if (response.ok) {
-        console.log("User registered with ID:", result.userId);
+        console.log("User registered with ID:");
         return true;
       } else {
         return false;

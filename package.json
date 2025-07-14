@@ -8,8 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "node server.js",
-    "dev:full": "concurrently \"npm run server\" \"npm run dev\""
+    "server": "node src/server/server.cjs",
+    "dev:full": "concurrently \"bun run server\" \"bun run dev\""
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
