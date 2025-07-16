@@ -4,15 +4,11 @@ export default function Register({ currentPage, setCurrentPage }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
 
-  const handleRegister = async () => {
+  const saveData = async () => {
     const userdata = {
       name: name.trim(),
       phone: phone.trim(),
     };
-
-    if (!userdata.name || !userdata.phone) {
-      return false;
-    }
 
     try {
       const response = await fetch("http://localhost:3001/api/register", {
@@ -26,8 +22,6 @@ export default function Register({ currentPage, setCurrentPage }) {
       if (response.ok) {
         console.log("User registered successfully");
         return true;
-      } else {
-        return false;
       }
     } catch (error) {
       console.error("Error registering user:", error);
@@ -39,7 +33,7 @@ export default function Register({ currentPage, setCurrentPage }) {
     e.preventDefault();
 
     if (currentPage === 1) {
-      const success = await handleRegister();
+      const success = await saveData();
       if (!success) {
         return; // Don't proceed to next page if registration failed
       }

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* BlackBones Font */
+@font-face {
+  font-family: 'BlackBones';
+  src: url('../public/BlackBones.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
@@ -22,12 +31,25 @@ input[type="number"] {
 
 .main-text {
   @apply text-[3.25em] font-semibold text-[#002448];
+  font-family: 'BlackBones', Arial, sans-serif;
 }
 
 .main-button {
   @apply text-[3.25em] font-semibold bg-[#002448] text-white;
+  font-family: 'BlackBones', Arial, sans-serif;
 }
 
 .height-input {
   @apply h-[126px];
+}
+
+/* Dynamic Backgrounds */
+.start-bg {
+  background-image: url("../public/1.png");
+  @apply h-screen w-full bg-cover bg-center bg-no-repeat;
+}
+
+.another-bg {
+  background-image: url("../public/23.png");
+  @apply h-screen w-full bg-cover bg-center bg-no-repeat;
 }
