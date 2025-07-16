@@ -3,7 +3,7 @@
 /* BlackBones Font */
 @font-face {
   font-family: "BlackBones";
-  src: url("../public/BlackBones.otf") format("opentype");
+  src: url("/BlackBones.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -46,12 +46,12 @@ input[type="number"] {
 
 /* Dynamic Backgrounds */
 .register-bg {
-  background-image: url("../public/1.png");
+  background-image: url("/1.png");
   @apply h-screen w-full bg-cover bg-center bg-no-repeat;
 }
 
 .another-bg {
-  background-image: url("../public/23.png");
+  background-image: url("/23.png");
   @apply h-screen w-full bg-cover bg-center bg-no-repeat;
 }
 
