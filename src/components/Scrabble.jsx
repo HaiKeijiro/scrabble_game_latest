@@ -4,8 +4,8 @@ import wordsData from "../words.json";
 const ScrabbleGame = ({ setCurrentPage }) => {
   // Game configuration
   const TOTAL_ROUNDS = 4;
-  const TIME_PER_ROUND = 5; // seconds
-  const POINTS_PER_WORD = 10;
+  const TIME_PER_ROUND = 180; // seconds
+  const POINTS_PER_WORD = 25;
 
   // Shuffle function
   const shuffleWord = (word) => {
@@ -34,6 +34,7 @@ const ScrabbleGame = ({ setCurrentPage }) => {
   const [isGameOver, setIsGameOver] = useState(false);
   const [isTimeOver, setIsTimeOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
+  const [completedRounds, setCompletedRounds] = useState(0);
 
   // Initialize game
   useEffect(() => {
@@ -84,6 +85,9 @@ const ScrabbleGame = ({ setCurrentPage }) => {
 
   // Handle next round
   const handleNextRound = () => {
+    // Increment completed rounds count
+    setCompletedRounds(completedRounds + 1);
+
     if (currentRound < TOTAL_ROUNDS - 1) {
       setCurrentRound(currentRound + 1);
       setSelectedIndices([]);
@@ -101,11 +105,6 @@ const ScrabbleGame = ({ setCurrentPage }) => {
     setGameStarted(true);
   };
 
-  // Reset game
-  const resetGame = () => {
-    setCurrentPage((prevState) => prevState + 1);
-  };
-
   // Shake effect
   const triggerShakeEffect = () => {
     setIsShake(true);
@@ -119,163 +118,132 @@ const ScrabbleGame = ({ setCurrentPage }) => {
   // Render start screen
   if (!gameStarted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
-        <div className="text-center text-white">
-          <h1 className="text-6xl font-bold mb-8 animate-bounce">
-            SCRABBLE GAME
-          </h1>
-          <p className="text-2xl mb-8">
-            Unscramble {TOTAL_ROUNDS} words in {TIME_PER_ROUND} seconds each!
-          </p>
-          <button
-            onClick={startGame}
-            className="bg-yellow-400 text-black text-2xl px-8 py-4 rounded-lg hover:bg-yellow-300 transition-colors transform hover:scale-105"
-          >
-            START GAME
-          </button>
-        </div>
-      </div>
+      <main className="another-bg uppercase flex flex-col items-center pt-[28rem] h-screen text-[5em] text-white">
+        <h1 className="font-black mb-4">scrabble game</h1>
+        <p className="text-[0.4em] mb-8 text-center">
+          unscramble {TOTAL_ROUNDS} words in {TIME_PER_ROUND} seconds each!
+        </p>
+        <button
+          onClick={startGame}
+          className="bg-button rounded-[10rem] px-16 py-4 text-[0.4em] font-bold transition-colors duration-200 hover:bg-[#0f3a7a]"
+        >
+          start game
+        </button>
+      </main>
     );
   }
 
   // Render game over screen
   if (isGameOver) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-600 flex items-center justify-center">
-        <div className="text-center text-white">
-          <h1 className="text-6xl font-bold mb-8 animate-pulse">GAME OVER!</h1>
-          <p className="text-3xl mb-4">Your Final Score:</p>
-          <p className="text-8xl font-bold mb-8 text-yellow-300">{score}</p>
-          <p className="text-xl mb-8">
-            You completed {currentRound + (isCorrect ? 1 : 0)} out of{" "}
-            {TOTAL_ROUNDS} rounds
-          </p>
-          <button
-            onClick={resetGame}
-            className="bg-yellow-400 text-black text-2xl px-8 py-4 rounded-lg hover:bg-yellow-300 transition-colors transform hover:scale-105"
-          >
-            PLAY AGAIN
-          </button>
-        </div>
-      </div>
+      <main className="another-bg uppercase flex flex-col items-center pt-[20rem] h-screen text-[5em] text-white">
+        <h1 className="font-black mb-4 animate-pulse">game over!</h1>
+        <p className="text-[0.6em] mb-4">your final score:</p>
+        <p className="text-[1.5em] font-black mb-6 text-yellow-300">{score}</p>
+        <p className="text-[0.3em] mb-8 text-center">
+          you completed {completedRounds} out of {TOTAL_ROUNDS} rounds
+        </p>
+        <button
+          onClick={() => setCurrentPage(0)}
+          className="bg-button rounded-[10rem] px-12 py-3 text-[0.3em] font-bold transition-colors duration-200 hover:bg-[#0f3a7a]"
+        >
+          play again
+        </button>
+      </main>
     );
   }
 
   // Render correct answer screen
   if (isCorrect) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-        <div className="text-center text-white">
-          <h1 className="text-8xl font-bold animate-bounce text-yellow-300">
-            AWESOME!
-          </h1>
-          <p className="text-2xl mt-4">+{POINTS_PER_WORD} points!</p>
-        </div>
-      </div>
+      <main className="another-bg uppercase flex flex-col items-center pt-[28rem] h-screen text-[5em] text-white">
+        <h1 className="text-[1.5em] font-black animate-bounce text-yellow-300 mb-4">
+          awesome!
+        </h1>
+        <p className="text-[0.4em]">+{POINTS_PER_WORD} points!</p>
+      </main>
     );
   }
 
   // Render time over screen
   if (isTimeOver) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center">
-        <div className="text-center text-white">
-          <h1 className="text-6xl font-bold mb-4 animate-pulse">TIME'S UP!</h1>
-          <p className="text-2xl">The word was: {gameWords[currentRound]}</p>
-        </div>
-      </div>
+      <main className="another-bg uppercase flex flex-col items-center pt-[28rem] h-screen text-[5em] text-white">
+        <h1 className="font-black mb-4 animate-pulse">time's up!</h1>
+        <p className="text-[0.4em] text-center">
+          the word was: {gameWords[currentRound]}
+        </p>
+      </main>
     );
   }
 
   // Main game screen
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 to-pink-600 p-8">
-      <div className="max-w-4xl mx-auto text-center text-white">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <div className="text-2xl font-bold">
-              Round {currentRound + 1}/{TOTAL_ROUNDS}
-            </div>
-            <div className="text-2xl font-bold">Score: {score}</div>
-          </div>
-
-          {/* Timer */}
-          <div
-            className={`text-6xl font-bold mb-4 ${time <= 10 ? "text-red-300 animate-pulse" : "text-yellow-300"}`}
-          >
-            {time}s
-          </div>
-        </div>
-
-        {/* Word blanks */}
-        <div
-          className={`flex justify-center gap-4 mb-8 ${isShake ? "animate-shake" : ""}`}
+    <main className="another-bg uppercase flex flex-col items-center pt-[15rem] h-screen text-[5em] text-white font-serif">
+      {/* Time */}
+      <div>
+        <p
+          className={`text-[3em] font-black mb-6 ${time <= 2 && "text-red-400 animate-pulse"}`}
         >
-          {gameWords[currentRound]?.split("").map((_, index) => (
-            <div
-              key={index}
-              className="w-16 h-16 border-b-4 border-white flex items-center justify-center"
-            >
-              <span className="text-3xl font-bold">
-                {filledWord[index] || ""}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Scrambled letters */}
-        <div className="text-center">
-          <p className="text-xl mb-4">Click the letters to unscramble:</p>
-          <div className="flex justify-center gap-2 flex-wrap">
-            {scrambledWord.split("").map((char, index) => (
-              <button
-                key={index}
-                onClick={() => handleCharacterClick(char, index)}
-                disabled={selectedIndices.includes(index)}
-                className={`w-16 h-16 text-2xl font-bold rounded-lg transition-all transform hover:scale-105 ${
-                  selectedIndices.includes(index)
-                    ? "bg-gray-400 text-gray-600 cursor-not-allowed opacity-50"
-                    : "bg-yellow-400 text-black hover:bg-yellow-300 shadow-lg"
-                }`}
-              >
-                {char}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Reset button */}
-        <button
-          onClick={() => {
-            setSelectedIndices([]);
-            setFilledWord("");
-          }}
-          className="mt-8 bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-400 transition-colors"
-        >
-          Clear Word
-        </button>
+          {time}
+        </p>
       </div>
 
-      {/* CSS for shake animation */}
-      <style jsx>{`
-        @keyframes shake {
-          0%,
-          100% {
-            transform: translateX(0);
-          }
-          25% {
-            transform: translateX(-5px);
-          }
-          75% {
-            transform: translateX(5px);
-          }
-        }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-      `}</style>
-    </div>
+      {/* Score */}
+      <div>
+        <p className="text-[.5em]">score: {score}</p>
+      </div>
+
+      {/* Word blanks */}
+      <div
+        className={`flex justify-center gap-4 mb-8 ${isShake ? "animate-bounce" : ""}`}
+      >
+        {gameWords[currentRound]?.split("").map((_, index) => (
+          <div
+            key={index}
+            className="w-12 h-12 border-b-4 border-white flex items-center justify-center"
+          >
+            <span className="text-[0.5em] font-bold">
+              {filledWord[index] || ""}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Card-style letter list */}
+      <div className="w-full text-center">
+        <p className="text-[0.25em] mb-6 text-center">
+          tap the letters to unscramble:
+        </p>
+        <div className="flex justify-center gap-4 flex-wrap max-w-md mx-auto">
+          {scrambledWord.split("").map((char, index) => (
+            <button
+              key={index}
+              onClick={() => handleCharacterClick(char, index)}
+              disabled={selectedIndices.includes(index)}
+              className={`w-16 h-16 font-bold text-[0.5em] uppercase transition-all duration-300 transform ${
+                selectedIndices.includes(index)
+                  ? "opacity-40 cursor-not-allowed scale-95 text-white/60"
+                  : "text-white hover:scale-105"
+              }`}
+            >
+              {char}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Clear all button */}
+      <button
+        onClick={() => {
+          setSelectedIndices([]);
+          setFilledWord("");
+        }}
+        className="mt-6 bg-white/20 rounded-xl px-8 py-3 text-[0.25em] font-bold transition-colors duration-200 border border-white/30"
+      >
+        clear all
+      </button>
+    </main>
   );
 };
 
