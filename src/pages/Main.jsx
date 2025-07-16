@@ -14,5 +14,5 @@ export default function Game() {
     <Score setCurrentPage={setCurrentPage} />,
   ];
 
-  return <div>{pages[currentPage]}</div>;
+  return <div className="blackbones-font">{pages[currentPage]}</div>;
 }
