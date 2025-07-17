@@ -4,7 +4,7 @@ import wordsData from "../words.json";
 const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
   // Game configuration
   const TOTAL_ROUNDS = 4;
-  const TIME_PER_ROUND = 10; // seconds
+  const TIME_PER_ROUND = 15; // seconds
   const POINTS_PER_WORD = 25;
 
   // Shuffle function
