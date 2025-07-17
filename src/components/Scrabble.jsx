@@ -198,7 +198,7 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
           onClick={handlePlayAgain}
           className="bg-button rounded-[10rem] px-12 py-3 text-[0.3em] font-bold transition-colors duration-200 hover:bg-[#0f3a7a]"
         >
-          play again
+          Home
         </button>
       </main>
     );
