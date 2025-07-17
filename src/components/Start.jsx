@@ -1,6 +1,6 @@
 export default function Start({ setCurrentPage }) {
   return (
-    <main className="another-bg uppercase flex flex-col items-center pt-[28rem] h-screen text-[5em] text-white">
+    <main className="another-bg uppercase flex flex-col items-center pt-[26.5rem] h-screen text-[5em] text-white">
       <h1 className="font-black">fast!</h1>
       <h1 className="font-black">and get the price</h1>
       <button
