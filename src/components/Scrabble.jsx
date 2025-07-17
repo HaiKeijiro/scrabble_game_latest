@@ -4,7 +4,7 @@ import wordsData from "../words.json";
 const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
   // Game configuration
   const TOTAL_ROUNDS = 4;
-  const TIME_PER_ROUND = 1; // seconds
+  const TIME_PER_ROUND = 10; // seconds
   const POINTS_PER_WORD = 25;
 
   // Shuffle function
@@ -30,7 +30,7 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
   const [score, setScore] = useState(0);
   const [time, setTime] = useState(TIME_PER_ROUND);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [isShake, setIsShake] = useState(false);
+  const [isEarthquake, setIsEarthquake] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isTimeOver, setIsTimeOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
@@ -129,7 +129,7 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
         setIsCorrect(true);
         setTimeout(() => handleNextRound(), 2000);
       } else {
-        triggerShakeEffect();
+        triggerEarthquakeEffect();
       }
     }
   }, [filledWord, gameWords, currentRound]);
@@ -156,14 +156,14 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
     setGameStarted(true);
   };
 
-  // Shake effect
-  const triggerShakeEffect = () => {
-    setIsShake(true);
+  // Earthquake effect
+  const triggerEarthquakeEffect = () => {
+    setIsEarthquake(true);
     setTimeout(() => {
-      setIsShake(false);
+      setIsEarthquake(false);
       setSelectedIndices([]);
       setFilledWord("");
-    }, 500);
+    }, 800);
   };
 
   // Render start screen
@@ -247,7 +247,7 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
 
       {/* Word blanks */}
       <div
-        className={`flex justify-center gap-4 mb-8 ${isShake ? "animate-bounce" : ""}`}
+        className={`flex justify-center gap-4 mb-8 ${isEarthquake ? "earthquake" : ""}`}
       >
         {gameWords[currentRound]?.split("").map((_, index) => (
           <button
