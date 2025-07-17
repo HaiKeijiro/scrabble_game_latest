@@ -168,7 +168,7 @@ const ScrabbleGame = ({ setCurrentPage }) => {
   if (isCorrect) {
     return (
       <main className="another-bg uppercase flex flex-col items-center pt-[28rem] h-screen text-[5em] text-white">
-        <h1 className="text-[1.5em] font-black animate-bounce text-yellow-300 mb-4">
+        <h1 className="text-[1.5em] font-black animate-bounce">
           awesome!
         </h1>
         <p className="text-[0.4em]">+{POINTS_PER_WORD} points!</p>
@@ -194,14 +194,14 @@ const ScrabbleGame = ({ setCurrentPage }) => {
       {/* Time */}
       <div>
         <p
-          className={`text-[3em] font-black mb-6 ${time <= 2 && "text-red-400 animate-pulse"}`}
+          className={`text-[3em] font-black ${time <= 2 && "text-red-400 animate-pulse"}`}
         >
           {time}
         </p>
       </div>
 
       {/* Score */}
-      <div>
+      <div className="mb-6">
         <p className="text-[.5em]">score: {score}</p>
       </div>
 
@@ -231,7 +231,7 @@ const ScrabbleGame = ({ setCurrentPage }) => {
         <p className="text-[0.25em] mb-6 text-center">
           tap the letters to unscramble:
         </p>
-        <div className="flex justify-center gap-4 flex-wrap mx-auto">
+        <div className="flex justify-center gap-2 flex-wrap mx-auto">
           {scrambledWord.split("").map((char, index) => (
             <button
               key={index}
