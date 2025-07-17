@@ -4,7 +4,7 @@ import wordsData from "../words.json";
 const ScrabbleGame = ({ setCurrentPage }) => {
   // Game configuration
   const TOTAL_ROUNDS = 4;
-  const TIME_PER_ROUND = 180; // seconds
+  const TIME_PER_ROUND = 100; // seconds
   const POINTS_PER_WORD = 25;
 
   // Shuffle function
@@ -190,7 +190,7 @@ const ScrabbleGame = ({ setCurrentPage }) => {
 
   // Main game screen
   return (
-    <main className="another-bg uppercase flex flex-col items-center pt-[15rem] h-screen text-[5em] text-white blackbones-font">
+    <main className="another-bg uppercase flex flex-col items-center pt-[17rem] h-screen text-[5em] text-white blackbones-font">
       {/* Time */}
       <div>
         <p
