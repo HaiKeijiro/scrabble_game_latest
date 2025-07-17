@@ -31,7 +31,21 @@ db.serialize(() => {
   )`);
 });
 
-// API Routes
+
+// Get all users
+app.get('/api/users', (req, res) => {
+  db.all('SELECT * FROM users ORDER BY created_at DESC', (err, rows) => {
+    if (err) {
+      console.error('Error retrieving users:', err.message);
+      return res.status(500).json({ error: 'Failed to retrieve users' });
+    }
+    
+    res.json({ 
+      success: true, 
+      users: rows
+    });
+  });
+});
 
 // Register a new user
 app.post('/api/register', (req, res) => {
