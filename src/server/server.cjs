@@ -26,6 +26,7 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     phone TEXT NOT NULL,
+    score INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 });
@@ -36,12 +37,12 @@ db.serialize(() => {
 app.post('/api/register', (req, res) => {
   const { name, phone } = req.body;
   
-  if (!name || !phone) {
-    return res.status(400).json({ error: 'Name and phone are required' });
+  if (!name || !phone || !score) {
+    return res.status(400).json({ error: 'Name, phone and score are required' });
   }
 
-  const stmt = db.prepare('INSERT INTO users (name, phone) VALUES (?, ?)');
-  stmt.run([name.trim(), phone.trim()], function(err) {
+  const stmt = db.prepare('INSERT INTO users (name, phone, score) VALUES (?, ?, ?)');
+  stmt.run([name.trim(), phone.trim(), score], function(err) {
     if (err) {
       console.error('Error inserting user:', err.message);
       return res.status(500).json({ error: 'Failed to register user' });
@@ -50,40 +51,9 @@ app.post('/api/register', (req, res) => {
     res.json({ 
       success: true, 
       message: 'User registered successfully',
-      userId: this.lastID 
     });
   });
   stmt.finalize();
-});
-
-// Get all users
-app.get('/api/users', (req, res) => {
-  db.all('SELECT * FROM users ORDER BY created_at DESC', [], (err, rows) => {
-    if (err) {
-      console.error('Error fetching users:', err.message);
-      return res.status(500).json({ error: 'Failed to fetch users' });
-    }
-    
-    res.json(rows);
-  });
-});
-
-// Get user by ID
-app.get('/api/users/:id', (req, res) => {
-  const userId = req.params.id;
-  
-  db.get('SELECT * FROM users WHERE id = ?', [userId], (err, row) => {
-    if (err) {
-      console.error('Error fetching user:', err.message);
-      return res.status(500).json({ error: 'Failed to fetch user' });
-    }
-    
-    if (!row) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json(row);
-  });
 });
 
 // Start server
