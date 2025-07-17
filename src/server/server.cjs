@@ -35,9 +35,9 @@ db.serialize(() => {
 
 // Register a new user
 app.post('/api/register', (req, res) => {
-  const { name, phone } = req.body;
+  const { name, phone, score } = req.body;
   
-  if (!name || !phone || !score) {
+  if (!name || !phone || score === undefined) {
     return res.status(400).json({ error: 'Name, phone and score are required' });
   }
 

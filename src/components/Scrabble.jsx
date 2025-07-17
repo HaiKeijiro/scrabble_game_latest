@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import wordsData from "../words.json";
 
-const ScrabbleGame = ({ setCurrentPage }) => {
+const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
   // Game configuration
   const TOTAL_ROUNDS = 4;
   const TIME_PER_ROUND = 1; // seconds
@@ -35,6 +35,46 @@ const ScrabbleGame = ({ setCurrentPage }) => {
   const [isTimeOver, setIsTimeOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [completedRounds, setCompletedRounds] = useState(0);
+
+  // Function to save user data with score to database
+  const saveUserData = async () => {
+    const userDataWithScore = {
+      name: userData.name,
+      phone: userData.phone,
+      score: score
+    };
+
+    try {
+      const response = await fetch("http://localhost:3001/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userDataWithScore),
+      });
+
+      if (response.ok) {
+        console.log("User data saved successfully");
+      } else {
+        console.error("Failed to save user data");
+      }
+    } catch (error) {
+      console.error("Error saving user data:", error);
+    }
+  };
+
+  // Handle play again button click
+  const handlePlayAgain = async () => {
+    await saveUserData();
+    
+    // Clear the user data state
+    setUserData({
+      name: "",
+      phone: "",
+    });
+    
+    setCurrentPage(0);
+  };
 
   // Initialize game
   useEffect(() => {
@@ -155,7 +195,7 @@ const ScrabbleGame = ({ setCurrentPage }) => {
           you completed {completedRounds} out of {TOTAL_ROUNDS} rounds
         </p>
         <button
-          onClick={() => setCurrentPage(0)}
+          onClick={handlePlayAgain}
           className="bg-button rounded-[10rem] px-12 py-3 text-[0.3em] font-bold transition-colors duration-200 hover:bg-[#0f3a7a]"
         >
           play again
