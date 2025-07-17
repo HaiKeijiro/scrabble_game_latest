@@ -70,6 +70,17 @@ const ScrabbleGame = ({ setCurrentPage }) => {
     }
   };
 
+  // Handle clicking on filled word to undo
+  const handleFilledWordClick = (clickedIndex) => {
+    // Find which scrambled letter corresponds to this position
+    const newFilledWord = filledWord.slice(0, clickedIndex) + filledWord.slice(clickedIndex + 1);
+    const newSelectedIndices = [...selectedIndices];
+    newSelectedIndices.splice(clickedIndex, 1);
+    
+    setFilledWord(newFilledWord);
+    setSelectedIndices(newSelectedIndices);
+  };
+
   // Check if word is complete and correct
   useEffect(() => {
     if (filledWord.length === gameWords[currentRound]?.length) {
@@ -179,7 +190,7 @@ const ScrabbleGame = ({ setCurrentPage }) => {
 
   // Main game screen
   return (
-    <main className="another-bg uppercase flex flex-col items-center pt-[15rem] h-screen text-[5em] text-white font-serif">
+    <main className="another-bg uppercase flex flex-col items-center pt-[15rem] h-screen text-[5em] text-white blackbones-font">
       {/* Time */}
       <div>
         <p
@@ -199,14 +210,19 @@ const ScrabbleGame = ({ setCurrentPage }) => {
         className={`flex justify-center gap-4 mb-8 ${isShake ? "animate-bounce" : ""}`}
       >
         {gameWords[currentRound]?.split("").map((_, index) => (
-          <div
+          <button
             key={index}
-            className="w-12 h-12 border-b-4 border-white flex items-center justify-center"
+            onClick={() => filledWord[index] && handleFilledWordClick(index)}
+            className={`w-12 h-12 border-b-4 border-white flex items-center justify-center transition-all duration-200 ${
+              filledWord[index] 
+                ? "cursor-pointer hover:bg-white/20 hover:scale-105" 
+                : "cursor-default"
+            }`}
           >
             <span className="text-[0.5em] font-bold">
               {filledWord[index] || ""}
             </span>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -215,7 +231,7 @@ const ScrabbleGame = ({ setCurrentPage }) => {
         <p className="text-[0.25em] mb-6 text-center">
           tap the letters to unscramble:
         </p>
-        <div className="flex justify-center gap-4 flex-wrap max-w-md mx-auto">
+        <div className="flex justify-center gap-4 flex-wrap mx-auto">
           {scrambledWord.split("").map((char, index) => (
             <button
               key={index}
@@ -239,7 +255,7 @@ const ScrabbleGame = ({ setCurrentPage }) => {
           setSelectedIndices([]);
           setFilledWord("");
         }}
-        className="mt-6 bg-white/20 rounded-xl px-8 py-3 text-[0.25em] font-bold transition-colors duration-200 border border-white/30"
+        className="mt-6 bg-button rounded-xl px-8 py-3 text-[0.25em] font-bold transition-colors duration-200"
       >
         clear all
       </button>
