@@ -47,13 +47,51 @@ app.get('/api/users', (req, res) => {
   });
 });
 
+// Rate limiting store (simple in-memory for demo)
+const rateLimitStore = new Map();
+
 // Register a new user
 app.post('/api/register', (req, res) => {
   const { name, phone, score } = req.body;
   
+  // Input validation
   if (!name || !phone || score === undefined) {
     return res.status(400).json({ error: 'Name, phone and score are required' });
   }
+
+  // Validate data types and lengths
+  if (typeof name !== 'string' || typeof phone !== 'string' || typeof score !== 'number') {
+    return res.status(400).json({ error: 'Invalid data types' });
+  }
+
+  if (name.trim().length < 2 || name.trim().length > 50) {
+    return res.status(400).json({ error: 'Name must be between 2 and 50 characters' });
+  }
+
+  if (phone.trim().length < 10 || phone.trim().length > 15) {
+    return res.status(400).json({ error: 'Phone number must be between 10 and 15 characters' });
+  }
+
+  if (score < 0 || score > 1000) {
+    return res.status(400).json({ error: 'Score must be between 0 and 1000' });
+  }
+
+  // Simple rate limiting (max 5 registrations per IP per minute)
+  const clientIP = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+  const windowMs = 60000; // 1 minute
+  
+  if (!rateLimitStore.has(clientIP)) {
+    rateLimitStore.set(clientIP, []);
+  }
+  
+  const requests = rateLimitStore.get(clientIP).filter(time => now - time < windowMs);
+  if (requests.length >= 5) {
+    return res.status(429).json({ error: 'Too many registration attempts. Please try again later.' });
+  }
+  
+  requests.push(now);
+  rateLimitStore.set(clientIP, requests);
 
   const stmt = db.prepare('INSERT INTO users (name, phone, score) VALUES (?, ?, ?)');
   stmt.run([name.trim(), phone.trim(), score], function(err) {

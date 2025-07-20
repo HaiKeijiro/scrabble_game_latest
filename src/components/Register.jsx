@@ -38,13 +38,15 @@ export default function Register({ setCurrentPage, userData, setUserData }) {
         />
 
         <input
-          type="number"
+          type="phone"
           name="phone"
           id="phone"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="Phone Number"
           required
+          minLength="10"
+          maxLength="15"
           className="bg-white/90 rounded-[10rem] pl-10 pr-6 py-2 mx-auto w-full font-medium placeholder-black border-none outline-none"
         />
 

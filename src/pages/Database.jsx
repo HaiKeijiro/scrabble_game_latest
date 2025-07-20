@@ -1,18 +1,33 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 export default function Database() {
   const [exporting, setExporting] = useState(false);
   const [message, setMessage] = useState("");
+  const abortControllerRef = useRef(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const exportToExcel = async () => {
     try {
       setExporting(true);
       setMessage("");
 
-      // Fetch users directly for export
-      const response = await fetch("http://localhost:3001/api/users");
+      // Create abort controller for cleanup
+      abortControllerRef.current = new AbortController();
+
+      // Fetch users directly for export with abort signal
+      const response = await fetch("http://localhost:3001/api/users", {
+        signal: abortControllerRef.current.signal
+      });
       const data = await response.json();
 
       if (!data.success) {
@@ -63,10 +78,16 @@ export default function Database() {
         `✨ Magic! ${data.users.length} records exported successfully!`
       );
     } catch (err) {
-      console.error("Error exporting database:", err);
-      setMessage("❌ Magic failed! Please try again.");
+      if (err.name === 'AbortError') {
+        console.log('Export request was cancelled');
+        setMessage("Export cancelled");
+      } else {
+        console.error("Error exporting database:", err);
+        setMessage("❌ Magic failed! Please try again.");
+      }
     } finally {
       setExporting(false);
+      abortControllerRef.current = null;
     }
   };
 

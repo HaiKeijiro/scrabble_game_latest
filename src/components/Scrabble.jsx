@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useReducer } from "react";
 import wordsData from "../words.json";
 
 const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
@@ -21,27 +21,94 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
     return shuffled.slice(0, TOTAL_ROUNDS);
   };
 
-  // States
-  const [gameWords, setGameWords] = useState([]);
-  const [currentRound, setCurrentRound] = useState(0);
-  const [scrambledWord, setScrambledWord] = useState("");
-  const [selectedIndices, setSelectedIndices] = useState([]);
-  const [filledWord, setFilledWord] = useState("");
-  const [score, setScore] = useState(0);
-  const [time, setTime] = useState(TIME_PER_ROUND);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [isEarthquake, setIsEarthquake] = useState(false);
-  const [isGameOver, setIsGameOver] = useState(false);
-  const [isTimeOver, setIsTimeOver] = useState(false);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [completedRounds, setCompletedRounds] = useState(0);
+  // Consolidated game state using useReducer for better performance
+  const initialGameState = {
+    gameWords: [],
+    currentRound: 0,
+    scrambledWord: "",
+    selectedIndices: [],
+    filledWord: "",
+    score: 0,
+    time: TIME_PER_ROUND,
+    isCorrect: false,
+    isEarthquake: false,
+    isGameOver: false,
+    isTimeOver: false,
+    gameStarted: false,
+    completedRounds: 0,
+  };
+
+  const gameReducer = (state, action) => {
+    switch (action.type) {
+      case 'SET_GAME_WORDS':
+        return { ...state, gameWords: action.payload };
+      case 'START_GAME':
+        return { ...state, gameStarted: true };
+      case 'NEXT_ROUND':
+        return {
+          ...state,
+          currentRound: state.currentRound + 1,
+          selectedIndices: [],
+          filledWord: "",
+          time: TIME_PER_ROUND,
+          isCorrect: false,
+          isTimeOver: false,
+          completedRounds: state.completedRounds + 1,
+        };
+      case 'GAME_OVER':
+        return { ...state, isGameOver: true };
+      case 'SET_SCRAMBLED_WORD':
+        return { ...state, scrambledWord: action.payload };
+      case 'SELECT_CHARACTER':
+        return {
+          ...state,
+          selectedIndices: [...state.selectedIndices, action.index],
+          filledWord: state.filledWord + action.char,
+        };
+      case 'REMOVE_CHARACTER': {
+        const newIndices = [...state.selectedIndices];
+        newIndices.splice(action.clickedIndex, 1);
+        return {
+          ...state,
+          selectedIndices: newIndices,
+          filledWord: state.filledWord.slice(0, action.clickedIndex) + 
+                      state.filledWord.slice(action.clickedIndex + 1),
+        };
+      }
+      case 'CLEAR_SELECTION':
+        return { ...state, selectedIndices: [], filledWord: "" };
+      case 'CORRECT_ANSWER':
+        return { 
+          ...state, 
+          score: state.score + POINTS_PER_WORD, 
+          isCorrect: true 
+        };
+      case 'EARTHQUAKE':
+        return { ...state, isEarthquake: action.payload };
+      case 'TIME_TICK':
+        return { ...state, time: state.time - 1 };
+      case 'TIME_OVER':
+        return { ...state, isTimeOver: true };
+      case 'RESET_GAME':
+        return initialGameState;
+      default:
+        return state;
+    }
+  };
+
+  const [gameState, dispatch] = useReducer(gameReducer, initialGameState);
+  
+  // UI state (keep separate as these are independent)
+  const [saveError, setSaveError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastClickTime, setLastClickTime] = useState(0);
 
   // Function to save user data with score to database
   const saveUserData = async () => {
     const userDataWithScore = {
       name: userData.name,
       phone: userData.phone,
-      score: score
+      score: gameState.score
     };
 
     try {
@@ -53,121 +120,129 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
         body: JSON.stringify(userDataWithScore),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (response.ok) {
         console.log("User data saved successfully");
+        return { success: true };
       } else {
-        console.error("Failed to save user data");
+        console.error("Failed to save user data:", data.error || `HTTP ${response.status}`);
+        return { success: false, error: data.error || `HTTP ${response.status}` };
       }
     } catch (error) {
       console.error("Error saving user data:", error);
+      return { success: false, error: "Network error - please check your connection" };
     }
   };
 
   // Handle play again button click
   const handlePlayAgain = async () => {
-    await saveUserData();
+    setIsSaving(true);
+    setSaveError(null);
     
-    // Clear the user data state
-    setUserData({
-      name: "",
-      phone: "",
-    });
+    const result = await saveUserData();
     
-    setCurrentPage(0);
+    setIsSaving(false);
+    
+    if (result.success) {
+      // Clear the user data state
+      setUserData({
+        name: "",
+        phone: "",
+      });
+      setCurrentPage(0);
+    } else {
+      setSaveError(result.error);
+    }
   };
+
+  // Handle next round
+  const handleNextRound = useCallback(() => {
+    if (gameState.currentRound < TOTAL_ROUNDS - 1) {
+      dispatch({ type: 'NEXT_ROUND' });
+    } else {
+      dispatch({ type: 'GAME_OVER' });
+    }
+  }, [gameState.currentRound, TOTAL_ROUNDS]);
 
   // Initialize game
   useEffect(() => {
-    if (!gameStarted) {
+    if (!gameState.gameStarted) {
       const words = getRandomWords();
-      setGameWords(words);
+      dispatch({ type: 'SET_GAME_WORDS', payload: words });
     }
-  }, [gameStarted]);
+  }, [gameState.gameStarted]);
 
   // Scramble current word
   useEffect(() => {
-    if (gameWords.length > 0 && currentRound < gameWords.length) {
-      setScrambledWord(shuffleWord(gameWords[currentRound]));
+    if (gameState.gameWords.length > 0 && gameState.currentRound < gameState.gameWords.length) {
+      dispatch({ type: 'SET_SCRAMBLED_WORD', payload: shuffleWord(gameState.gameWords[gameState.currentRound]) });
     }
-  }, [currentRound, gameWords]);
+  }, [gameState.currentRound, gameState.gameWords]);
 
   // Timer
   useEffect(() => {
-    if (gameStarted && time > 0 && !isCorrect && !isGameOver) {
-      const timer = setTimeout(() => setTime(time - 1), 1000);
+    if (gameState.gameStarted && gameState.time > 0 && !gameState.isCorrect && !gameState.isGameOver) {
+      const timer = setTimeout(() => dispatch({ type: 'TIME_TICK' }), 1000);
       return () => clearTimeout(timer);
-    } else if (time === 0 && !isGameOver) {
-      setIsTimeOver(true);
-      setTimeout(() => handleNextRound(), 2000);
+    } else if (gameState.time === 0 && !gameState.isGameOver && !gameState.isTimeOver) {
+      dispatch({ type: 'TIME_OVER' });
     }
-  }, [time, isCorrect, isGameOver, gameStarted]);
+  }, [gameState.time, gameState.isCorrect, gameState.isGameOver, gameState.gameStarted, gameState.isTimeOver]);
 
-  // Handle character click
-  const handleCharacterClick = (char, index) => {
-    if (selectedIndices.length < gameWords[currentRound].length) {
-      setSelectedIndices([...selectedIndices, index]);
-      setFilledWord(filledWord + char);
+  // Handle time over progression
+  useEffect(() => {
+    if (gameState.isTimeOver) {
+      const timeoutId = setTimeout(() => handleNextRound(), 2000);
+      return () => clearTimeout(timeoutId);
     }
-  };
+  }, [gameState.isTimeOver, handleNextRound]);
+
+  // Handle character click with debouncing
+  const handleCharacterClick = useCallback((char, index) => {
+    const now = Date.now();
+    if (now - lastClickTime < 50) return; // Prevent spam clicks within 50ms
+    
+    if (gameState.selectedIndices.length < gameState.gameWords[gameState.currentRound]?.length && !gameState.selectedIndices.includes(index)) {
+      setLastClickTime(now);
+      dispatch({ type: 'SELECT_CHARACTER', char: char, index: index });
+    }
+  }, [gameState.selectedIndices, gameState.gameWords, gameState.currentRound, lastClickTime]);
 
   // Handle clicking on filled word to undo
-  const handleFilledWordClick = (clickedIndex) => {
-    // Find which scrambled letter corresponds to this position
-    const newFilledWord = filledWord.slice(0, clickedIndex) + filledWord.slice(clickedIndex + 1);
-    const newSelectedIndices = [...selectedIndices];
-    newSelectedIndices.splice(clickedIndex, 1);
-    
-    setFilledWord(newFilledWord);
-    setSelectedIndices(newSelectedIndices);
-  };
+  const handleFilledWordClick = useCallback((clickedIndex) => {
+    dispatch({ type: 'REMOVE_CHARACTER', clickedIndex: clickedIndex });
+  }, []);
+
+  // Earthquake effect
+  const triggerEarthquakeEffect = useCallback(() => {
+    dispatch({ type: 'EARTHQUAKE', payload: true });
+    setTimeout(() => {
+      dispatch({ type: 'EARTHQUAKE', payload: false });
+      dispatch({ type: 'CLEAR_SELECTION' });
+    }, 800);
+  }, []);
 
   // Check if word is complete and correct
   useEffect(() => {
-    if (filledWord.length === gameWords[currentRound]?.length) {
-      if (filledWord === gameWords[currentRound]) {
-        setScore(score + POINTS_PER_WORD);
-        setIsCorrect(true);
-        setTimeout(() => handleNextRound(), 2000);
+    if (gameState.filledWord.length === gameState.gameWords[gameState.currentRound]?.length) {
+      if (gameState.filledWord === gameState.gameWords[gameState.currentRound]) {
+        dispatch({ type: 'CORRECT_ANSWER' });
+        const timeoutId = setTimeout(() => handleNextRound(), 2000);
+        return () => clearTimeout(timeoutId); // ✅ CLEANUP ADDED
       } else {
         triggerEarthquakeEffect();
       }
     }
-  }, [filledWord, gameWords, currentRound]);
-
-  // Handle next round
-  const handleNextRound = () => {
-    // Increment completed rounds count
-    setCompletedRounds(completedRounds + 1);
-
-    if (currentRound < TOTAL_ROUNDS - 1) {
-      setCurrentRound(currentRound + 1);
-      setSelectedIndices([]);
-      setFilledWord("");
-      setTime(TIME_PER_ROUND);
-      setIsCorrect(false);
-      setIsTimeOver(false);
-    } else {
-      setIsGameOver(true);
-    }
-  };
+  }, [gameState.filledWord, gameState.gameWords, gameState.currentRound, handleNextRound, POINTS_PER_WORD, triggerEarthquakeEffect]);
 
   // Start game
   const startGame = () => {
-    setGameStarted(true);
-  };
-
-  // Earthquake effect
-  const triggerEarthquakeEffect = () => {
-    setIsEarthquake(true);
-    setTimeout(() => {
-      setIsEarthquake(false);
-      setSelectedIndices([]);
-      setFilledWord("");
-    }, 800);
+    dispatch({ type: 'START_GAME' });
   };
 
   // Render start screen
-  if (!gameStarted) {
+  if (!gameState.gameStarted) {
     return (
       <main className="another-bg uppercase flex flex-col items-center pt-[28rem] h-screen text-[5em] text-white">
         <h1 className="font-black mb-4">scrabble game</h1>
@@ -185,27 +260,37 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
   }
 
   // Render game over screen
-  if (isGameOver) {
+  if (gameState.isGameOver) {
     return (
       <main className="another-bg uppercase flex flex-col items-center pt-[20rem] h-screen text-[5em] text-white">
         <h1 className="font-black mb-4 animate-pulse">game over!</h1>
         <p className="text-[0.6em] mb-4">your final score:</p>
-        <p className="text-[1.5em] font-black mb-6">{score}</p>
+        <p className="text-[1.5em] font-black mb-6">{gameState.score}</p>
         <p className="text-[0.3em] mb-8 text-center">
-          you completed {completedRounds} out of {TOTAL_ROUNDS} rounds
+          you completed {gameState.completedRounds} out of {TOTAL_ROUNDS} rounds
         </p>
+        {saveError && (
+          <div className="mb-4 text-[0.3em] text-red-400 bg-black/30 rounded-2xl px-8 py-3 backdrop-blur-sm">
+            ⚠️ Save failed: {saveError}
+          </div>
+        )}
         <button
           onClick={handlePlayAgain}
-          className="bg-button rounded-[10rem] px-12 py-3 text-[0.3em] font-bold transition-colors duration-200 hover:bg-[#0f3a7a]"
+          disabled={isSaving}
+          className={`bg-button rounded-[10rem] px-12 py-3 text-[0.3em] font-bold transition-colors duration-200 ${
+            isSaving 
+              ? "opacity-50 cursor-not-allowed" 
+              : "hover:bg-[#0f3a7a]"
+          }`}
         >
-          Home
+          {isSaving ? "Saving..." : "Home"}
         </button>
       </main>
     );
   }
 
   // Render correct answer screen
-  if (isCorrect) {
+  if (gameState.isCorrect) {
     return (
       <main className="another-bg uppercase flex flex-col items-center pt-[28rem] h-screen text-[5em] text-white">
         <h1 className="text-[1.5em] font-black animate-bounce">
@@ -217,12 +302,12 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
   }
 
   // Render time over screen
-  if (isTimeOver) {
+  if (gameState.isTimeOver) {
     return (
       <main className="another-bg uppercase flex flex-col items-center pt-[28rem] h-screen text-[5em] text-white">
         <h1 className="font-black mb-4 animate-pulse">time's up!</h1>
         <p className="text-[0.4em] text-center">
-          the word was: {gameWords[currentRound]}
+          the word was: {gameState.gameWords[gameState.currentRound]}
         </p>
       </main>
     );
@@ -234,33 +319,33 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
       {/* Time */}
       <div>
         <p
-          className={`text-[3em] font-black ${time <= 2 && "text-red-400 animate-pulse"}`}
+          className={`text-[3em] font-black ${gameState.time <= 2 && "text-red-400 animate-pulse"}`}
         >
-          {time}
+          {gameState.time}
         </p>
       </div>
 
       {/* Score */}
       <div className="mb-6">
-        <p className="text-[.5em]">score: {score}</p>
+        <p className="text-[.5em]">score: {gameState.score}</p>
       </div>
 
       {/* Word blanks */}
       <div
-        className={`flex justify-center gap-4 mb-8 ${isEarthquake ? "earthquake" : ""}`}
+        className={`flex justify-center gap-4 mb-8 ${gameState.isEarthquake ? "earthquake" : ""}`}
       >
-        {gameWords[currentRound]?.split("").map((_, index) => (
+        {gameState.gameWords[gameState.currentRound]?.split("").map((_, index) => (
           <button
             key={index}
-            onClick={() => filledWord[index] && handleFilledWordClick(index)}
+            onClick={() => gameState.filledWord[index] && handleFilledWordClick(index)}
             className={`w-12 h-12 border-b-4 border-white flex items-center justify-center transition-all duration-200 ${
-              filledWord[index] 
+              gameState.filledWord[index] 
                 ? "cursor-pointer hover:bg-white/20 hover:scale-105" 
                 : "cursor-default"
             }`}
           >
             <span className="text-[0.5em] font-bold">
-              {filledWord[index] || ""}
+              {gameState.filledWord[index] || ""}
             </span>
           </button>
         ))}
@@ -272,13 +357,13 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
           tap the letters to unscramble:
         </p>
         <div className="flex justify-center gap-2 flex-wrap mx-auto">
-          {scrambledWord.split("").map((char, index) => (
+          {gameState.scrambledWord.split("").map((char, index) => (
             <button
               key={index}
               onClick={() => handleCharacterClick(char, index)}
-              disabled={selectedIndices.includes(index)}
+              disabled={gameState.selectedIndices.includes(index)}
               className={`w-16 h-16 font-bold text-[0.5em] uppercase transition-all duration-300 transform ${
-                selectedIndices.includes(index)
+                gameState.selectedIndices.includes(index)
                   ? "opacity-40 cursor-not-allowed scale-95 text-white/60"
                   : "text-white hover:scale-105"
               }`}
@@ -292,8 +377,7 @@ const ScrabbleGame = ({ setCurrentPage, userData, setUserData }) => {
       {/* Clear all button */}
       <button
         onClick={() => {
-          setSelectedIndices([]);
-          setFilledWord("");
+          dispatch({ type: 'CLEAR_SELECTION' });
         }}
         className="mt-6 bg-button rounded-xl px-8 py-3 text-[0.25em] font-bold transition-colors duration-200"
       >
